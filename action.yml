@@ -1,0 +1,52 @@
+name: 'K8s YAML Generator'
+description: 'Genera file YAML per Kubernetes da configurazioni e variabili di ambiente'
+inputs:
+  instance:
+    description: 'Instance of the application'
+    required: false
+    default: ''
+  namespace:
+    description: 'Namespace for Kubernetes'
+    required: false
+    default: 'default'
+  serviceType:
+    description: 'Type of Kubernetes Service'
+    required: false
+    default: 'ClusterIP'
+  targetPort:
+    description: 'Target port for the service'
+    required: false
+    default: 8080
+  replicas:
+    description: 'Number of replicas for the deployment'
+    required: false
+    default: 1
+  registry:
+    description: 'Docker registry for the image'
+    required: true
+  owner:
+    description: 'Owner of the Docker image'
+    required: true
+  minReplicas:
+    description: 'Minimum replicas for the HPA'
+    required: false
+    default: 1
+  maxReplicas:
+    description: 'Maximum replicas for the HPA'
+    required: false
+    default: 3
+  targetCPUUtilizationPercentage:
+    description: 'Target CPU Utilization Percentage for the HPA'
+    required: false
+    default: 80
+  verbose:
+    description: 'Enable verbose logging'
+    required: false
+    default: 'false'
+  path:
+    description: 'Directory path for package.json, build-info.json, and .env files'
+    required: false
+    default: '.'
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
