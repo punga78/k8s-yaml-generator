@@ -31123,12 +31123,15 @@ if (fs.existsSync(envPath)) {
     exit(`File .env non trovato nel percorso ${envPath}`);
 }
 
+// Carica il file package.json usando readFileSync e JSON.parse
 const packagePath = path.join(contextPath, "package.json");
 if (!fs.existsSync(packagePath)) {
     exit(`File package.json non trovato nel percorso ${packagePath}`);
 }
-const package = require(packagePath);
+const packageContent = fs.readFileSync(packagePath, "utf8");
+const packageJson = JSON.parse(packageContent);
 
+// Carica il file build-info.json usando readFileSync e JSON.parse
 const buildInfoPath = path.join(contextPath, "build-info.json");
 let buildInfo = { buildNumber: 0 };
 if (fs.existsSync(buildInfoPath)) {
@@ -31138,8 +31141,8 @@ log(`build-info.json content: ${JSON.stringify(buildInfo)}`);
 
 const port = parseInt(process.env.PORT, 10);
 
-const version = `${package.version}-${buildInfo.buildNumber}`;
-const autor = package.author.replace(" ", "_");
+const version = `${packageJson.version}-${buildInfo.buildNumber}`;
+const autor = packageJson.author.replace(" ", "_");
 
 // Valori di default
 const defaultConfig = {
@@ -31177,7 +31180,7 @@ if (!config.owner) {
 // Definisci i metadati di base utilizzati da tutti gli oggetti
 const baseMetadata = {
     labels: {
-        "app.kubernetes.io/name": package.name,
+        "app.kubernetes.io/name": packageJson.name,
         "app.kubernetes.io/author": autor,
         "app.kubernetes.io/version": version,
         "app.kubernetes.io/instance": config.instance
@@ -31189,7 +31192,7 @@ const baseMetadata = {
 const configMap = {
     apiVersion: "v1",
     kind: "ConfigMap",
-    metadata: { ...baseMetadata, name: `${package.name}-config` },
+    metadata: { ...baseMetadata, name: `${packageJson.name}-config` },
     data: dotenv.parse(fs.readFileSync(envPath))
 };
 
@@ -31197,7 +31200,7 @@ const configMap = {
 const service = {
     apiVersion: "v1",
     kind: "Service",
-    metadata: { ...baseMetadata, name: `${package.name}-service` },
+    metadata: { ...baseMetadata, name: `${packageJson.name}-service` },
     spec: {
         type: config.serviceType,
         selector: baseMetadata.labels,
@@ -31209,7 +31212,7 @@ const service = {
 const deployment = {
     apiVersion: "apps/v1",
     kind: "Deployment",
-    metadata: { ...baseMetadata, name: `${package.name}` },
+    metadata: { ...baseMetadata, name: `${packageJson.name}` },
     spec: {
         replicas: config.replicas,
         selector: { matchLabels: baseMetadata.labels },
@@ -31218,10 +31221,10 @@ const deployment = {
             spec: {
                 containers: [
                     {
-                        name: package.name,
-                        image: `${config.registry}/${config.owner}/${package.name}:${version}`,
+                        name: packageJson.name,
+                        image: `${config.registry}/${config.owner}/${packageJson.name}:${version}`,
                         ports: [{ containerPort: port }],
-                        envFrom: [{ configMapRef: { name: `${package.name}-config` } }],
+                        envFrom: [{ configMapRef: { name: `${packageJson.name}-config` } }],
                         imagePullPolicy: "Always"
                     }
                 ],
@@ -31235,12 +31238,12 @@ const deployment = {
 const autoscaler = {
     apiVersion: "autoscaling/v1",
     kind: "HorizontalPodAutoscaler",
-    metadata: { ...baseMetadata, name: `${package.name}-autoscaler` },
+    metadata: { ...baseMetadata, name: `${packageJson.name}-autoscaler` },
     spec: {
         scaleTargetRef: {
             apiVersion: "apps/v1",
             kind: "Deployment",
-            name: package.name
+            name: packageJson.name
         },
         minReplicas: config.minReplicas,
         maxReplicas: config.maxReplicas,
