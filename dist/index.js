@@ -31108,7 +31108,10 @@ function log(msg) {
 }
 
 const contextPath = core.getInput("path") || '.';
+const directoryPath = core.getInput("directoryPath") || path.join('.', "k8s");
+const imagePullSecretsName = core.getInput("imagePullSecretsName");
 
+// Funzione per uscire con un messaggio di errore
 const exit = (msg) => {
     console.error(msg);
     process.exit(1);
@@ -31123,9 +31126,18 @@ if (fs.existsSync(envPath)) {
     exit(`File .env non trovato nel percorso ${envPath}`);
 }
 
+// Imposta i valori predefiniti per PORT e HOST se non sono definiti
+const envConfig = dotenv.parse(fs.readFileSync(envPath));
+const port = parseInt(process.env.PORT, 10) || 3000;
+const host = process.env.HOST || '0.0.0.0';
+
+// Aggiungi PORT e HOST nel envConfig se non presenti
+envConfig.PORT = envConfig.PORT || '3000';
+envConfig.HOST = envConfig.HOST || '0.0.0.0';
+
 // Carica il file package.json usando readFileSync e JSON.parse
 const packagePath = path.join(contextPath, "package.json");
-if (!fs.existsSync(packagePath)) {
+if (!fs.exists(packagePath)) {
     exit(`File package.json non trovato nel percorso ${packagePath}`);
 }
 const packageContent = fs.readFileSync(packagePath, "utf8");
@@ -31138,8 +31150,6 @@ if (fs.existsSync(buildInfoPath)) {
     buildInfo = JSON.parse(fs.readFileSync(buildInfoPath, "utf8"));
 }
 log(`build-info.json content: ${JSON.stringify(buildInfo)}`);
-
-const port = parseInt(process.env.PORT, 10);
 
 const version = `${packageJson.version}-${buildInfo.buildNumber}`;
 const autor = packageJson.author.replace(" ", "_");
@@ -31193,7 +31203,7 @@ const configMap = {
     apiVersion: "v1",
     kind: "ConfigMap",
     metadata: { ...baseMetadata, name: `${packageJson.name}-config` },
-    data: dotenv.parse(fs.readFileSync(envPath))
+    data: envConfig
 };
 
 // Service
@@ -31227,12 +31237,16 @@ const deployment = {
                         envFrom: [{ configMapRef: { name: `${packageJson.name}-config` } }],
                         imagePullPolicy: "Always"
                     }
-                ],
-                imagePullSecrets: [{ name: "regcred" }]
+                ]
             }
         }
     }
 };
+
+// Aggiungi imagePullSecrets se imagePullSecretsName è specificato
+if (imagePullSecretsName) {
+    deployment.spec.template.spec.imagePullSecrets = [{ name: imagePullSecretsName }];
+}
 
 // HorizontalPodAutoscaler
 const autoscaler = {
@@ -31264,8 +31278,6 @@ yamlContents.push(yaml.dump(deployment, yamlOptions));
 yamlContents.push(yaml.dump(autoscaler, yamlOptions));
 
 const allYaml = yamlContents.join("\n---\n");
-
-const directoryPath = path.join('.', "k8s"); // Imposta il percorso della directory
 
 // Verifica se la directory esiste
 if (!fs.existsSync(directoryPath)) {

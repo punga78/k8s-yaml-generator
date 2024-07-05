@@ -27,6 +27,8 @@ jobs:
           replicas: 3
           registry: 'my-registry'
           owner: 'my-owner'
+          directoryPath: k8s
+          imagePullSecretsName: regcred
           minReplicas: 1
           maxReplicas: 5
           targetCPUUtilizationPercentage: 75

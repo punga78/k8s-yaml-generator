@@ -47,6 +47,13 @@ inputs:
     description: 'Directory path for package.json, build-info.json, and .env files'
     required: false
     default: '.'
+  imagePullSecretsName:
+    description: 'Custom secret for image and private repository'
+    required: false
+  directoryPath:
+    description: 'Output Directory path'
+    required: false
+    default: '.'
 runs:
-  using: 'node12'
+  using: 'node20'
   main: 'dist/index.js'
