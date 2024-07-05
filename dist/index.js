@@ -31265,7 +31265,7 @@ yamlContents.push(yaml.dump(autoscaler, yamlOptions));
 
 const allYaml = yamlContents.join("\n---\n");
 
-const directoryPath = path.join(__dirname, "k8s"); // Imposta il percorso della directory
+const directoryPath = path.join('.', "k8s"); // Imposta il percorso della directory
 
 // Verifica se la directory esiste
 if (!fs.existsSync(directoryPath)) {
