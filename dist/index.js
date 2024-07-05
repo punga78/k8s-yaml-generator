@@ -31108,53 +31108,76 @@ function log(msg) {
 }
 
 const contextPath = core.getInput("path") || '.';
-const directoryPath = core.getInput("directoryPath") || path.join('.', "k8s");
-const imagePullSecretsName = core.getInput("imagePullSecretsName");
+log(`contextPath: ${contextPath}`);
 
-// Funzione per uscire con un messaggio di errore
+const directoryPath = core.getInput("directoryPath") || path.join('.', "k8s");
+log(`directoryPath: ${directoryPath}`);
+
+const imagePullSecretsName = core.getInput("imagePullSecretsName");
+log(`imagePullSecretsName: ${imagePullSecretsName}`);
+
+// Function to exit with an error message
 const exit = (msg) => {
     console.error(msg);
+    core.setFailed(`Error writing the YAML file: ${msg}`);
     process.exit(1);
 };
 
-// Carica le variabili di ambiente dal file .env
+// Load environment variables from the .env file
 const envPath = path.join(contextPath, ".env");
+log(`envPath: ${envPath}`);
+
 if (fs.existsSync(envPath)) {
     dotenv.config({ path: envPath });
-    log("Caricate le variabili di ambiente dal file .env");
+    log("Loaded environment variables from the .env file");
 } else {
-    exit(`File .env non trovato nel percorso ${envPath}`);
+    exit(`.env file not found at path ${envPath}`);
 }
 
-// Imposta i valori predefiniti per PORT e HOST se non sono definiti
+// Set default values for PORT and HOST if not defined
 const envConfig = dotenv.parse(fs.readFileSync(envPath));
-const port = parseInt(process.env.PORT, 10) || 3000;
-const host = process.env.HOST || '0.0.0.0';
+log(`envConfig: ${JSON.stringify(envConfig)}`);
 
-// Aggiungi PORT e HOST nel envConfig se non presenti
-envConfig.PORT = envConfig.PORT || '3000';
+// Add PORT and HOST to envConfig if not present
+envConfig.PORT = envConfig.PORT || 3000;
+log(`envConfig.PORT: ${envConfig.PORT}`);
+
 envConfig.HOST = envConfig.HOST || '0.0.0.0';
+log(`envConfig.HOST: ${envConfig.HOST}`);
 
-// Carica il file package.json usando readFileSync e JSON.parse
+const port = envConfig.PORT;
+log(`port: ${port}`);
+
+// Load the package.json file using readFileSync and JSON.parse
 const packagePath = path.join(contextPath, "package.json");
-if (!fs.exists(packagePath)) {
-    exit(`File package.json non trovato nel percorso ${packagePath}`);
+log(`packagePath: ${packagePath}`);
+
+if (!fs.existsSync(packagePath)) {
+    exit(`package.json file not found at path ${packagePath}`);
 }
 const packageContent = fs.readFileSync(packagePath, "utf8");
-const packageJson = JSON.parse(packageContent);
+log(`packageContent: ${packageContent}`);
 
-// Carica il file build-info.json usando readFileSync e JSON.parse
+const packageJson = JSON.parse(packageContent);
+log(`packageJson: ${JSON.stringify(packageJson)}`);
+
+// Load the build-info.json file using readFileSync and JSON.parse
 const buildInfoPath = path.join(contextPath, "build-info.json");
+log(`buildInfoPath: ${buildInfoPath}`);
+
 let buildInfo = { buildNumber: 0 };
 if (fs.existsSync(buildInfoPath)) {
     buildInfo = JSON.parse(fs.readFileSync(buildInfoPath, "utf8"));
 }
-log(`build-info.json content: ${JSON.stringify(buildInfo)}`);
+log(`buildInfo: ${JSON.stringify(buildInfo)}`);
 
 const version = `${packageJson.version}-${buildInfo.buildNumber}`;
-const autor = packageJson.author.replace(" ", "_");
+log(`version: ${version}`);
 
-// Valori di default
+const author = packageJson.author.replace(" ", "_");
+log(`author: ${author}`);
+
+// Default values
 const defaultConfig = {
     replicas: 1,
     targetPort: 8080,
@@ -31164,8 +31187,9 @@ const defaultConfig = {
     maxReplicas: 3,
     targetCPUUtilizationPercentage: 80
 };
+log(`defaultConfig: ${JSON.stringify(defaultConfig)}`);
 
-// Ottieni le configurazioni dagli input dell'azione, utilizzando i valori di default se non specificati
+// Get configurations from the action inputs, using default values if not specified
 const config = {
     instance: core.getInput('instance') || defaultConfig.instance,
     namespace: core.getInput('namespace') || defaultConfig.namespace,
@@ -31178,25 +31202,27 @@ const config = {
     maxReplicas: parseInt(core.getInput('maxReplicas'), 10) || defaultConfig.maxReplicas,
     targetCPUUtilizationPercentage: parseInt(core.getInput('targetCPUUtilizationPercentage'), 10) || defaultConfig.targetCPUUtilizationPercentage
 };
+log(`config: ${JSON.stringify(config)}`);
 
-// Verifica che i parametri obbligatori siano presenti
+// Ensure mandatory parameters are present
 if (!config.registry) {
-    exit("Parametro 'registry' obbligatorio non fornito.");
+    exit("Mandatory parameter 'registry' not provided.");
 }
 if (!config.owner) {
-    exit("Parametro 'owner' obbligatorio non fornito.");
+    exit("Mandatory parameter 'owner' not provided.");
 }
 
-// Definisci i metadati di base utilizzati da tutti gli oggetti
+// Define basic metadata used by all objects
 const baseMetadata = {
     labels: {
         "app.kubernetes.io/name": packageJson.name,
-        "app.kubernetes.io/author": autor,
+        "app.kubernetes.io/author": author,
         "app.kubernetes.io/version": version,
         "app.kubernetes.io/instance": config.instance
     },
     namespace: config.namespace || "default"
 };
+log(`baseMetadata: ${JSON.stringify(baseMetadata)}`);
 
 // ConfigMap
 const configMap = {
@@ -31205,6 +31231,7 @@ const configMap = {
     metadata: { ...baseMetadata, name: `${packageJson.name}-config` },
     data: envConfig
 };
+log(`configMap: ${JSON.stringify(configMap)}`);
 
 // Service
 const service = {
@@ -31217,6 +31244,7 @@ const service = {
         ports: [{ port: config.targetPort, targetPort: port, protocol: "TCP" }]
     }
 };
+log(`service: ${JSON.stringify(service)}`);
 
 // Deployment
 const deployment = {
@@ -31242,10 +31270,12 @@ const deployment = {
         }
     }
 };
+log(`deployment: ${JSON.stringify(deployment)}`);
 
-// Aggiungi imagePullSecrets se imagePullSecretsName è specificato
+// Add imagePullSecrets if imagePullSecretsName is specified
 if (imagePullSecretsName) {
     deployment.spec.template.spec.imagePullSecrets = [{ name: imagePullSecretsName }];
+    log(`deployment.spec.template.spec.imagePullSecrets: ${JSON.stringify(deployment.spec.template.spec.imagePullSecrets)}`);
 }
 
 // HorizontalPodAutoscaler
@@ -31264,12 +31294,14 @@ const autoscaler = {
         targetCPUUtilizationPercentage: config.targetCPUUtilizationPercentage
     }
 };
+log(`autoscaler: ${JSON.stringify(autoscaler)}`);
 
-// Opzioni YAML
+// YAML options
 const yamlOptions = {
     noRefs: true,
     styles: { "!!str": "double" }
 };
+log(`yamlOptions: ${JSON.stringify(yamlOptions)}`);
 
 const yamlContents = [];
 yamlContents.push(yaml.dump(configMap, yamlOptions));
@@ -31278,21 +31310,21 @@ yamlContents.push(yaml.dump(deployment, yamlOptions));
 yamlContents.push(yaml.dump(autoscaler, yamlOptions));
 
 const allYaml = yamlContents.join("\n---\n");
+log(`allYaml: ${allYaml}`);
 
-// Verifica se la directory esiste
+// Check if the directory exists
 if (!fs.existsSync(directoryPath)) {
-    // Se non esiste, creala
+    // If not, create it
     fs.mkdirSync(directoryPath, { recursive: true });
-    log(`Creata la directory ${directoryPath}`);
+    log(`Created directory ${directoryPath}`);
 }
 
-// Scrive il file YAML finale
+// Write the final YAML file
 fs.writeFile(path.join(directoryPath, "all-in-one.yaml"), allYaml, "utf8", (err) => {
     if (err) {
-        console.error("Errore durante la scrittura del file YAML:", err);
-        core.setFailed(`Errore durante la scrittura del file YAML: ${err.message}`);
+        console.error("Error writing the YAML file:", err);
     } else {
-        log("File YAML all-in-one creato con successo!");
+        log("Successfully created the all-in-one YAML file!");
     }
 });
 
