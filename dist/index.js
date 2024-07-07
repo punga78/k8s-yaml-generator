@@ -31139,7 +31139,7 @@ const envConfig = dotenv.parse(fs.readFileSync(envPath));
 log(`envConfig: ${JSON.stringify(envConfig)}`);
 
 // Add PORT and HOST to envConfig if not present
-envConfig.PORT = envConfig.PORT || 3000;
+envConfig.PORT = parseInt(envConfig.PORT || '3000', 10);
 log(`envConfig.PORT: ${envConfig.PORT}`);
 
 envConfig.HOST = envConfig.HOST || '0.0.0.0';
