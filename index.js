@@ -37,7 +37,7 @@ let envConfig = {};
 const envExist = fs.existsSync(envPath);
 if (envExist) {
     dotenv.config({ path: envPath });
-    log("Loaded environment variables from the .env file");
+    log(`Loaded environment variables from the ${envPath} file`);
     // Set default values for PORT and HOST if not defined
     envConfig = dotenv.parse(fs.readFileSync(envPath));
     log(`envConfig: ${JSON.stringify(envConfig)}`);
