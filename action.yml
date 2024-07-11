@@ -9,6 +9,10 @@ inputs:
     description: 'Namespace for Kubernetes'
     required: false
     default: 'default'
+  envName:
+    description: 'Name of env file'
+    required: false
+    default: '.env'
   serviceType:
     description: 'Type of Kubernetes Service'
     required: false
