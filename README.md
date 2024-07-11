@@ -4,7 +4,7 @@ This GitHub Action generates Kubernetes YAML files from configuration and enviro
 
 ## Usage
 
-To use this action in your GitHub workflow, add the following steps to your `.github/workflows/*.yml` file:
+To use this action in your GitHub workflow, add the following steps to your `.gitea/workflows/*.yml` file:
 
 ```yaml
 name: Generate K8s YAML
@@ -16,13 +16,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Generate K8s YAML
         uses: ./
         with:
           instance: 'my-instance'
           namespace: 'my-namespace'
           serviceType: 'ClusterIP'
+          envName: '.env'
           targetPort: 8080
           replicas: 3
           registry: 'my-registry'

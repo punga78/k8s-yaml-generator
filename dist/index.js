@@ -31123,20 +31123,20 @@ const exit = (msg) => {
     process.exit(1);
 };
 
+const envName = core.getInput("envName") || ".env";
 // Load environment variables from the .env file
-const envPath = path.join(contextPath, ".env");
+const envPath = path.join(contextPath, envName);
 log(`envPath: ${envPath}`);
 
-if (fs.existsSync(envPath)) {
+let envConfig = {};
+const envExist = fs.existsSync(envPath);
+if (envExist) {
     dotenv.config({ path: envPath });
     log("Loaded environment variables from the .env file");
-} else {
-    exit(`.env file not found at path ${envPath}`);
+    // Set default values for PORT and HOST if not defined
+    envConfig = dotenv.parse(fs.readFileSync(envPath));
+    log(`envConfig: ${JSON.stringify(envConfig)}`);
 }
-
-// Set default values for PORT and HOST if not defined
-const envConfig = dotenv.parse(fs.readFileSync(envPath));
-log(`envConfig: ${JSON.stringify(envConfig)}`);
 
 // Add PORT and HOST to envConfig if not present
 envConfig.PORT = parseInt(envConfig.PORT || '3000', 10);
@@ -31231,7 +31231,8 @@ const configMap = {
     metadata: { ...baseMetadata, name: `${packageJson.name}-config` },
     data: envConfig
 };
-log(`configMap: ${JSON.stringify(configMap)}`);
+if (envExist)
+    log(`configMap: ${JSON.stringify(configMap)}`);
 
 // Service
 const service = {
@@ -31304,7 +31305,8 @@ const yamlOptions = {
 log(`yamlOptions: ${JSON.stringify(yamlOptions)}`);
 
 const yamlContents = [];
-yamlContents.push(yaml.dump(configMap, yamlOptions));
+if (envExist)
+    yamlContents.push(yaml.dump(configMap, yamlOptions));
 yamlContents.push(yaml.dump(service, yamlOptions));
 yamlContents.push(yaml.dump(deployment, yamlOptions));
 yamlContents.push(yaml.dump(autoscaler, yamlOptions));
