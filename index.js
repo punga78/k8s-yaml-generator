@@ -125,7 +125,7 @@ const baseMetadata = {
         "app.kubernetes.io/version": version,
         "app.kubernetes.io/instance": config.instance
     },
-    namespace: config.namespace || "default"
+    namespace: config.namespace
 };
 log(`baseMetadata: ${JSON.stringify(baseMetadata)}`);
 
