@@ -35,6 +35,10 @@ jobs:
           targetCPUUtilizationPercentage: 75
           verbose: 'true'
           path: './config'
+          cpuRequest: '500m'
+          memoryRequest: '512Mi'
+          cpuLimit: '1000m' 
+          memoryLimit: '1024Mi' 
 ```
 
 ## Inputs
@@ -53,42 +57,14 @@ jobs:
 | `targetCPUUtilizationPercentage` | Target CPU Utilization Percentage for the HorizontalPodAutoscaler | No       | `80`               |
 | `verbose`                        | Enable verbose logging                                        | No       | `false`            |
 | `path`                           | Directory path for package.json, build-info.json, and .env files | No       | `.`                |
+| `cpuRequest`| The minimum amount of CPU guaranteed for each container, expressed in milliCPU (e.g., 500m means 50% of a CPU). | No |`500m`|
+| `memoryRequest`| The minimum amount of memory guaranteed for each container, expressed in MiB (e.g., 512Mi). | No |`512Mi`|
+| `cpuLimit`| The maximum amount of CPU a container can use, expressed in milliCPU (e.g., 1000m means one full CPU). | No |`1000m`|
+| `memoryLimit`| The maximum amount of memory a container can use, expressed in MiB (e.g., 1024Mi). | No |`1024Mi`|
 
 ## Outputs
 
-This action does not produce any outputs.
-
-## Example
-
-Below is an example of a GitHub workflow that uses this action:
-
-```yaml
-name: Generate K8s YAML
-
-on: [push]
-
-jobs:
-  generate-yaml:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-      - name: Generate K8s YAML
-        uses: ./
-        with:
-          instance: 'example-instance'
-          namespace: 'example-namespace'
-          serviceType: 'ClusterIP'
-          targetPort: 8080
-          replicas: 2
-          registry: 'dockerhub.io'
-          owner: 'example-owner'
-          minReplicas: 1
-          maxReplicas: 5
-          targetCPUUtilizationPercentage: 75
-          verbose: 'true'
-          path: './config'
-```
+This action produce artifact.
 
 ## Contributing
 

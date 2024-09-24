@@ -43,6 +43,22 @@ inputs:
     description: 'Target CPU Utilization Percentage for the HPA'
     required: false
     default: 80
+ cpuRequest:
+    description: 'CPU request per container'
+    required: false
+    default: '500m'
+  memoryRequest:
+    description: 'Memory request per container'
+    required: false
+    default: '512Mi'
+  cpuLimit:
+    description: 'CPU limit per container'
+    required: false
+    default: '1000m'
+  memoryLimit:
+    description: 'Memory limit per container'
+    required: false
+    default: '1024Mi'    
   verbose:
     description: 'Enable verbose logging'
     required: false
