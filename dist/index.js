@@ -31185,6 +31185,10 @@ const defaultConfig = {
     instance: "",
     minReplicas: 1,
     maxReplicas: 3,
+    cpuRequest: "500m",     // le richieste CPU
+    memoryRequest: "512Mi",  // le richieste di memoria
+    cpuLimit: "1000m",       // i limiti CPU
+    memoryLimit: "1024Mi",    // i limiti di memoria    
     targetCPUUtilizationPercentage: 80
 };
 log(`defaultConfig: ${JSON.stringify(defaultConfig)}`);
@@ -31200,7 +31204,11 @@ const config = {
     owner: core.getInput('owner', { required: true }),
     minReplicas: parseInt(core.getInput('minReplicas'), 10) || defaultConfig.minReplicas,
     maxReplicas: parseInt(core.getInput('maxReplicas'), 10) || defaultConfig.maxReplicas,
-    targetCPUUtilizationPercentage: parseInt(core.getInput('targetCPUUtilizationPercentage'), 10) || defaultConfig.targetCPUUtilizationPercentage
+    targetCPUUtilizationPercentage: parseInt(core.getInput('targetCPUUtilizationPercentage'), 10) || defaultConfig.targetCPUUtilizationPercentage,
+    cpuRequest: core.getInput('cpuRequest') || defaultConfig.cpuRequest,       
+    memoryRequest: core.getInput('memoryRequest') || defaultConfig.memoryRequest, 
+    cpuLimit: core.getInput('cpuLimit') || defaultConfig.cpuLimit,             
+    memoryLimit: core.getInput('memoryLimit') || defaultConfig.memoryLimit     
 };
 log(`config: ${JSON.stringify(config)}`);
 
@@ -31264,7 +31272,17 @@ const deployment = {
                         image: `${config.registry}/${config.owner}/${packageJson.name}:${version}`,
                         ports: [{ containerPort: port }],
                         envFrom: [{ configMapRef: { name: `${packageJson.name}-config` } }],
-                        imagePullPolicy: "Always"
+                        imagePullPolicy: "Always",
+                        resources: {
+                            requests: {
+                                cpu: config.cpuRequest,     // Usa la variabile per la richiesta CPU
+                                memory: config.memoryRequest // Usa la variabile per la richiesta di memoria
+                            },
+                            limits: {
+                                cpu: config.cpuLimit,       // Usa la variabile per il limite CPU
+                                memory: config.memoryLimit  // Usa la variabile per il limite di memoria
+                            }
+                        }                    
                     }
                 ]
             }
