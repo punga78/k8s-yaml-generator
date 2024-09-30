@@ -43,7 +43,7 @@ inputs:
     description: 'Target CPU Utilization Percentage for the HPA'
     required: false
     default: 80
- cpuRequest:
+  cpuRequest:
     description: 'CPU request per container'
     required: false
     default: '500m'
