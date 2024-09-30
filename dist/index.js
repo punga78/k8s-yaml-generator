@@ -31275,12 +31275,12 @@ const deployment = {
                         imagePullPolicy: "Always",
                         resources: {
                             requests: {
-                                cpu: config.cpuRequest,     // Usa la variabile per la richiesta CPU
-                                memory: config.memoryRequest // Usa la variabile per la richiesta di memoria
+                                cpu: config.cpuRequest,     
+                                memory: config.memoryRequest
                             },
                             limits: {
-                                cpu: config.cpuLimit,       // Usa la variabile per il limite CPU
-                                memory: config.memoryLimit  // Usa la variabile per il limite di memoria
+                                cpu: config.cpuLimit,       
+                                memory: config.memoryLimit  
                             }
                         }                    
                     }
@@ -31333,10 +31333,13 @@ const allYaml = yamlContents.join("\n---\n");
 log(`allYaml: ${allYaml}`);
 
 // Check if the directory exists
-if (!fs.existsSync(directoryPath)) {
-    // If not, create it
-    fs.mkdirSync(directoryPath, { recursive: true });
-    log(`Created directory ${directoryPath}`);
+try {
+    if (!fs.existsSync(directoryPath)) {
+        fs.mkdirSync(directoryPath, { recursive: true });
+        log(`Created directory ${directoryPath}`);
+    }
+} catch (err) {
+    exit(`Error creating directory ${directoryPath}: ${err.message}`);
 }
 
 // Write the final YAML file
