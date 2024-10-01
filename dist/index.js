@@ -31210,6 +31210,9 @@ const config = {
     cpuLimit: core.getInput('cpuLimit') || defaultConfig.cpuLimit,             
     memoryLimit: core.getInput('memoryLimit') || defaultConfig.memoryLimit     
 };
+const pvcSize = core.getInput("pvcSize"); 
+if (pvcSize)
+    log(`pvcSize: ${pvcSize}`);
 log(`config: ${JSON.stringify(config)}`);
 
 // Ensure mandatory parameters are present
@@ -31296,6 +31299,22 @@ if (imagePullSecretsName) {
     deployment.spec.template.spec.imagePullSecrets = [{ name: imagePullSecretsName }];
     log(`deployment.spec.template.spec.imagePullSecrets: ${JSON.stringify(deployment.spec.template.spec.imagePullSecrets)}`);
 }
+// PersistentVolumeClaim
+const pvc = {
+    apiVersion: "v1",
+    kind: "PersistentVolumeClaim",
+    metadata: { ...baseMetadata, name: `${packageJson.name}-pvc` },
+    spec: {
+        accessModes: ["ReadWriteOnce"],
+        resources: {
+            requests: {
+                storage: pvcSize
+            }
+        }
+    }
+};
+if (pvcSize) 
+    log(`pvc: ${JSON.stringify(pvc)}`);
 
 // HorizontalPodAutoscaler
 const autoscaler = {
@@ -31328,7 +31347,9 @@ if (envExist)
 yamlContents.push(yaml.dump(service, yamlOptions));
 yamlContents.push(yaml.dump(deployment, yamlOptions));
 yamlContents.push(yaml.dump(autoscaler, yamlOptions));
-
+if (pvcSize) {
+    yamlContents.push(yaml.dump(pvc, yamlOptions));
+}
 const allYaml = yamlContents.join("\n---\n");
 log(`allYaml: ${allYaml}`);
 
