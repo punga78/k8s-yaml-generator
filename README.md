@@ -61,7 +61,7 @@ jobs:
 | `memoryRequest`| The minimum amount of memory guaranteed for each container, expressed in MiB (e.g., 512Mi). | No |`512Mi`|
 | `cpuLimit`| The maximum amount of CPU a container can use, expressed in milliCPU (e.g., 1000m means one full CPU). | No |`1000m`|
 | `memoryLimit`| The maximum amount of memory a container can use, expressed in MiB (e.g., 1024Mi). | No |`1024Mi`|
-
+| `pvcSize`                        | Persistent Volume Claim size (e.g. 1Gi, 10Gi)                 | No       | `1Gi`              |
 ## Outputs
 
 This action produce artifact.

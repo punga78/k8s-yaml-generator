@@ -74,6 +74,9 @@ inputs:
     description: 'Output Directory path'
     required: false
     default: '.'
+  pvcSize:
+    description: 'Persistent Volume Claim size (e.g. 1Gi, 100m)'
+    required: false
 runs:
   using: 'node20'
   main: 'dist/index.js'
