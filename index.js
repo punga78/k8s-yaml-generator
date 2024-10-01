@@ -110,12 +110,12 @@ const config = {
     minReplicas: parseInt(core.getInput('minReplicas'), 10) || defaultConfig.minReplicas,
     maxReplicas: parseInt(core.getInput('maxReplicas'), 10) || defaultConfig.maxReplicas,
     targetCPUUtilizationPercentage: parseInt(core.getInput('targetCPUUtilizationPercentage'), 10) || defaultConfig.targetCPUUtilizationPercentage,
-    cpuRequest: core.getInput('cpuRequest') || defaultConfig.cpuRequest,       
-    memoryRequest: core.getInput('memoryRequest') || defaultConfig.memoryRequest, 
-    cpuLimit: core.getInput('cpuLimit') || defaultConfig.cpuLimit,             
-    memoryLimit: core.getInput('memoryLimit') || defaultConfig.memoryLimit     
+    cpuRequest: core.getInput('cpuRequest') || defaultConfig.cpuRequest,
+    memoryRequest: core.getInput('memoryRequest') || defaultConfig.memoryRequest,
+    cpuLimit: core.getInput('cpuLimit') || defaultConfig.cpuLimit,
+    memoryLimit: core.getInput('memoryLimit') || defaultConfig.memoryLimit
 };
-const pvcSize = core.getInput("pvcSize"); 
+const pvcSize = core.getInput("pvcSize");
 if (pvcSize)
     log(`pvcSize: ${pvcSize}`);
 log(`config: ${JSON.stringify(config)}`);
@@ -190,9 +190,24 @@ const deployment = {
                                 cpu: config.cpuLimit,       // Usa la variabile per il limite CPU
                                 memory: config.memoryLimit  // Usa la variabile per il limite di memoria
                             }
-                        }                    
+                        },
+                        // Mount the PVC as a volume in the container
+                        volumeMounts: pvcSize ? [
+                            {
+                                name: `${packageJson.name}-storage`,
+                                mountPath: "/usr/src/app/storage" // Il path all'interno del container dove verrà montato il volume
+                            }
+                        ] : []
                     }
-                ]
+                ],
+                volumes: pvcSize ? [
+                    {
+                        name: `${packageJson.name}-storage`,
+                        persistentVolumeClaim: {
+                            claimName: `${packageJson.name}-pvc`
+                        }
+                    }
+                ] : []
             }
         }
     }
@@ -218,7 +233,7 @@ const pvc = {
         }
     }
 };
-if (pvcSize) 
+if (pvcSize)
     log(`pvc: ${JSON.stringify(pvc)}`);
 
 // HorizontalPodAutoscaler
